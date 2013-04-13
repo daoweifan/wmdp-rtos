@@ -1,0 +1,17 @@
+#
+# bldc configuration written in linux configuration language
+#
+# Written by daowei@2013
+#
+#######################Please ensure the tasks in alphabetical order###############
+choice 'board select'	" \
+	NONE	CONFIG_BOARD_NONE \
+	ETHCAN  CONFIG_BOARD_ETHCAN \
+" NONE
+
+if [ "$CONFIG_BOARD_ETHCAN" = "y" ]; then
+	mainmenu_option next_comment
+		comment 'ethnet-can applications select'
+		source src/board/ethcan/Kconfig
+	endmenu
+fi
