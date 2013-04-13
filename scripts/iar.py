@@ -9,7 +9,7 @@ from os import *
 
 #the same path viewed by different app
 top_dir = getcwd()
-dir_prefix = "$PROJ_DIR$/../../"
+dir_prefix = "$PROJ_DIR$/../"
 
 def usage():
 	print "usage:"

@@ -3,7 +3,7 @@ AUTOCONFIG_HEAD_FILE = $(TOP_DIR)/autoconfig.h
 AUTOCONFIG_PROJ_FILE ?= ""
 AUTOCONFIG_MAKE_FILE = $(TOP_DIR)/.config
 IAR_TOOL = python $(TOP_DIR)/scripts/iar.py
-IAR_FILE = $(TOP_DIR)/projects/bldc/bldc.ewp
+IAR_FILE = $(TOP_DIR)/project/wmdp.ewp
 ENV_FILE = $(TOP_DIR)/make.env
 M ?= src/
 
@@ -13,25 +13,22 @@ M ?= src/
 -include $(ENV_FILE)
 
 iar: iar_script detect_config iar_clr iar_cfg iar_inc iar_add
-	@echo "projects/bldc/bldc.ewp has been created!"
+	@echo "project/wmdp.ewp has been created!"
 
 iar_help:
 	$(IAR_TOOL)
 iar_clr:
 	$(IAR_TOOL) clr $(IAR_FILE)
 iar_cfg:
-ifeq ($(CONFIG_CPU_STM32),y)
-	$(IAR_TOOL) cfg $(IAR_FILE) 'STM32F10xxB	ST STM32F10xxB' 'stm32f103rb.icf'
-endif
-ifeq ($(CONFIG_CPU_LM3S),y)
-	$(IAR_TOOL) cfg $(IAR_FILE) 'LM3Sx9xx	Luminary LM3Sx9xx' 'lm3s.icf'
-endif
-ifeq ($(CONFIG_CPU_SAM3U),y)
-	$(IAR_TOOL) cfg $(IAR_FILE) 'AT91SAM3U4	Atmel AT91SAM3U4' 'sam3u.icf'
-endif
+	$(IAR_TOOL) cfg $(IAR_FILE) 'S3C2440A	Samsung S3C2440A' 'UTU2440_RAM.icf'
 iar_inc:
 	$(IAR_TOOL) inc $(IAR_FILE) ./
 	$(IAR_TOOL) inc $(IAR_FILE) src/include/
+	$(IAR_TOOL) inc $(IAR_FILE) src/uCOS-II/Source/
+	$(IAR_TOOL) inc $(IAR_FILE) src/uC-CPU/ARM/IAR-II/Source/
+	$(IAR_TOOL) inc $(IAR_FILE) src/uC-CPU/ARM/IAR/
+	$(IAR_TOOL) inc $(IAR_FILE) src/uC-CPU/
+	$(IAR_TOOL) inc $(IAR_FILE) src/uC-LIB/
 
 iar_add:
 	@echo target=$@ M=$(M): obj-y = $(obj-y) inc-y = $(inc-y)
@@ -73,9 +70,6 @@ xconfig: $(PARSER)
 	fi
 
 iar_script:
-	@cp projects/ulp/ulp.ewd projects/bldc/bldc.ewd
-	@cp projects/ulp/ulp.ewp projects/bldc/bldc.ewp
-	@cp projects/ulp/ulp.eww projects/bldc/bldc.eww
 
 $(PARSER):
 	@make -s -C $(TKSCRIPTS_DIR) $@
@@ -101,10 +95,10 @@ unconfig:
 	@rm -rf $(ENV_FILE)
 
 clean: xconfig_clean
-	@rm -rf $(TOP_DIR)/projects/bldc/Debug
-	@rm -rf $(TOP_DIR)/projects/bldc/Release
-	@rm -rf $(TOP_DIR)/projects/bldc/settings
-	@rm -rf $(TOP_DIR)/projects/bldc/bldc.dep
+	@rm -rf $(TOP_DIR)/project/Debug
+	@rm -rf $(TOP_DIR)/project/Release
+	@rm -rf $(TOP_DIR)/project/settings
+	@rm -rf $(TOP_DIR)/project/wmdp.dep
 
 distclean: clean iar_clr unconfig
 
