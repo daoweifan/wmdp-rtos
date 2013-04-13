@@ -1,0 +1,27 @@
+#
+# bldc configuration written in linux configuration language
+#
+# Written by daowei@2013
+#
+
+mainmenu_name "wmdp software platform settings"
+
+mainmenu_option next_comment
+  comment 'libcpu'
+  source src/libcpu/Kconfig
+endmenu
+
+mainmenu_option next_comment
+  comment 'board'
+  source src/board/Kconfig
+endmenu
+
+mainmenu_option next_comment
+  comment 'drivers'
+  source src/drivers/Kconfig
+endmenu
+
+mainmenu_option next_comment
+  comment 'freertos'
+  source src/freertos/Kconfig
+endmenu
