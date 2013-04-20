@@ -8,6 +8,7 @@
 /* Hardware includes. */
 #include "s3c2440x.h"
 #include "option.h"
+#include "uart.h"
 
 
 /*-----------------------------------------------------------*/
@@ -24,10 +25,6 @@
 /* Constants required to handle critical sections. */
 #define portNO_CRITICAL_NESTING 		( ( unsigned long ) 0 )
 
-
-#define portINT_LEVEL_SENSITIVE  0
-#define portPIT_ENABLE      	( ( unsigned short ) 0x1 << 24 )
-#define portPIT_INT_ENABLE     	( ( unsigned short ) 0x1 << 25 )
 /*-----------------------------------------------------------*/
 
 /* Setup the WDT to generate the tick interrupts. */
@@ -125,7 +122,7 @@ extern void vPortStartFirstTask( void );
 	/* Start the timer that generates the tick ISR.  Interrupts are disabled
 	here already. */
 	// prvSetupTimerInterrupt();
-	WDT_IRQInit(1000);
+	WDT_IRQInit(configTICK_RATE_HZ);
 
 	/* Start the first task. */
 	vPortStartFirstTask();
@@ -145,10 +142,11 @@ void vPortEndScheduler( void )
 static void WDT_IRQHandler( void )
 {
 	if (rSUBSRCPND & BIT_SUB_WDT) {
-		//vTaskIncrementTick();
+		vTaskIncrementTick();
 		#if configUSE_PREEMPTION == 1
-		//vTaskSwitchContext();
+		vTaskSwitchContext();
 		#endif
+		// uart0.putstring("freertos\n\r");
 		ClearSubPending(BIT_SUB_WDT);
 	}
 	/*  Clear pending bit -- Watchdog timer */

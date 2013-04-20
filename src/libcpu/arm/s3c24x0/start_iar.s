@@ -20,6 +20,7 @@ IRQMODE 	EQU 	0x12
 SVCMODE 	EQU 	0x13
 ABORTMODE   EQU 	0x17
 UNDEFMODE   EQU 	0x1b
+SYSMODE     EQU 	0x1f
 MODEMASK	EQU 	0x1f
 NOINT   	EQU 	0xc0
 
@@ -42,13 +43,16 @@ NOINT   	EQU 	0xc0
 	EXTERN  ?main    ;The main entry of mon program
 	EXTERN  C_IRQHandler ; IRQ handler
 	SECTION .intvec:CODE:NOROOT(2)
+	IMPORT  LINK
+	IMPORT  vPortYieldProcessor
 	PUBLIC  __iar_program_start
 	CODE32  ; Always ARM mode after reset
 
 __iar_program_start:
 	b  ResetHandler    ;SYSTEM START
 	b  HandlerUndef    ;handler for Undefined mode
-	b  HandlerSWI      ;handler for SWI interrupt
+	; b  HandlerSWI      ;handler for SWI interrupt
+	b  vPortYieldProcessor
 	b  HandlerPabort   ;handler for PAbort
 	b  HandlerDabort   ;handler for DAbort
 	b  .               ;reserved
@@ -56,18 +60,18 @@ __iar_program_start:
 	b  HandlerFIQ      ;handler for FIQ interrupt
 
 HandlerIRQ:
-	sub	sp,sp,#4			;decrement sp(to store jump address)
-	stmfd	sp!,{r0}		;PUSH the work register to stack(lr does't push because it return to original address)
-	ldr		r0,=HandleIRQ	;load the address of HandleXXX to r0
-	ldr		r0,[r0]			;load the contents(service routine start address) of HandleXXX
-	str		r0,[sp,#4]		;store the contents(ISR) of HandleXXX to stack
-	ldmfd	sp!,{r0,pc}		;POP the work register and pc(jump to ISR)
+	; sub	sp,sp,#4			;decrement sp(to store jump address)
+	; stmfd	sp!,{r0}		;PUSH the work register to stack(lr does't push because it return to original address)
+	; ldr		r0,=HandleIRQ	;load the address of HandleXXX to r0
+	; ldr		r0,[r0]			;load the contents(service routine start address) of HandleXXX
+	; str		r0,[sp,#4]		;store the contents(ISR) of HandleXXX to stack
+	; ldmfd	sp!,{r0,pc}		;POP the work register and pc(jump to ISR)
 ; IRQ Handler share the same "context save&restore" module with Task Schedule
 ; The way of FREERTOS is different from UCOS and RT-Thread
 ; HandlerIRQ:
-	; portSAVE_CONTEXT					; Save the context of the current task.
-	; bl C_IRQHandler 					; Call C_IRQHandler
-	; portRESTORE_CONTEXT					; Restore the context of the selected task.
+	portSAVE_CONTEXT					; Save the context of the current task.
+	bl C_IRQHandler 					; Call C_IRQHandler
+	portRESTORE_CONTEXT					; Restore the context of the selected task.
 
 HandlerUndef:
 	sub	sp,sp,#4        ;decrement sp(to store jump address)
@@ -175,32 +179,37 @@ SMRDATA_SET:
 
 InitStacks:
 	mrs r0,cpsr
-	bic r0,r0,#MODEMASK
+	bic r0,r0,#MODEMASK|NOINT
+
 	orr r1,r0,#UNDEFMODE|NOINT
-	msr cpsr_cxsf,r1            ; UndefMode
+	msr cpsr_c,r1            ; UndefMode
 	ldr SP, = SFE(UND_STACK)
 
 	orr r1,r0,#ABORTMODE|NOINT
-	msr cpsr_cxsf,r1            ; AbortMode
+	msr cpsr_c,r1            ; AbortMode
 	ldr SP, = SFE(ABT_STACK)
 
 	orr r1,r0,#IRQMODE|NOINT
-	msr cpsr_cxsf,r1            ; IRQMode
+	msr cpsr_c,r1            ; IRQMode
 	ldr SP, = SFE(IRQ_STACK)
 
 	orr r1,r0,#FIQMODE|NOINT
-	msr cpsr_cxsf,r1            ; FIQMode
+	msr cpsr_c,r1            ; FIQMode
 	ldr SP, =SFE(FIQ_STACK)
 
-	bic r0,r0,#MODEMASK|NOINT
-	orr r1,r0,#SVCMODE
-	msr cpsr_cxsf,r1            ; SVCMode
+	orr r1,r0,#SVCMODE|NOINT
+	msr cpsr_c,r1            ; SVCMode
 	ldr SP, = SFE(SVC_STACK)
 
-	; USER mode is not initialized.
+	orr r1,r0,#SYSMODE|NOINT
+	msr cpsr_c,r1            ; USERMode/SYSMODE
+	ldr SP, =SFE(CSTACK)
+
+	orr r1,r0,#SVCMODE|NOINT
+	msr cpsr_c,r1            ; SVCMode
+
 	; Continue to Main for more IAR specific system startup
-	ldr r0,=?main
-	bx  r0
+	b ?main
 
 SMRDATA:
 	DATA
