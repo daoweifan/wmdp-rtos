@@ -1,0 +1,14 @@
+#
+# bldc configuration written in linux configuration language
+#
+# Written by daowei@2013
+#
+
+#uart0
+bool "enable uart0" CONFIG_DRIVER_UART0
+if [ "$CONFIG_DRIVER_UART0" = "y" ]; then
+		int "tx fifo size" CONFIG_UART0_TF_SZ 64
+		int "rx fifo size" CONFIG_UART0_RF_SZ 32
+		int "uart0 baudrate" CONFIG_UART0_BR 115200
+fi
+

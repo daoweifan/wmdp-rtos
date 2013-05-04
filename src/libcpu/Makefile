@@ -1,2 +1,2 @@
-obj-y += arm/
-inc-y += arm/
+obj-$(CONFIG_CPU_S3C24X0) += s3c24x0/
+inc-$(CONFIG_CPU_S3C24X0) += s3c24x0/

@@ -4,3 +4,11 @@
 # Written by daowei@2013
 #
 #######################Please ensure the tasks in alphabetical order###############
+
+bool "select cpu s3c24x0" CONFIG_CPU_S3C24X0
+if [ "$CONFIG_CPU_S3C24X0" = "y"] ; then
+	mainmenu_option next_comment
+		comment 's3c24x0 config'
+		source src/libcpu/s3c24x0/Kconfig
+	endmenu
+fi

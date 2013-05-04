@@ -201,6 +201,7 @@ extern "C" {
 
 
 // UART
+#define U0BASE      (*(volatile unsigned *)0x50000000)	//UART 0 Line control
 #define rULCON0     (*(volatile unsigned *)0x50000000)	//UART 0 Line control
 #define rUCON0      (*(volatile unsigned *)0x50000004)	//UART 0 Control
 #define rUFCON0     (*(volatile unsigned *)0x50000008)	//UART 0 FIFO control
