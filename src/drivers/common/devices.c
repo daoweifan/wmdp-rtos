@@ -10,8 +10,10 @@
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
+#include "wm_list.h"
 #include "debug.h"
 #include "devices.h"
+
 
 static LIST_HEAD(devs_head);
 

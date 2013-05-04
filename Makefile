@@ -24,11 +24,6 @@ iar_cfg:
 iar_inc:
 	$(IAR_TOOL) inc $(IAR_FILE) ./
 	$(IAR_TOOL) inc $(IAR_FILE) src/include/
-	$(IAR_TOOL) inc $(IAR_FILE) src/uCOS-II/Source/
-	$(IAR_TOOL) inc $(IAR_FILE) src/uC-CPU/ARM/IAR-II/Source/
-	$(IAR_TOOL) inc $(IAR_FILE) src/uC-CPU/ARM/IAR/
-	$(IAR_TOOL) inc $(IAR_FILE) src/uC-CPU/
-	$(IAR_TOOL) inc $(IAR_FILE) src/uC-LIB/
 
 iar_add:
 	@echo target=$@ M=$(M): obj-y = $(obj-y) inc-y = $(inc-y)

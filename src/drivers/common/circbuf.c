@@ -17,10 +17,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307	 USA
  *
  */
-
+#include <string.h>
 #include <stdlib.h>
-
-#include <circbuf.h>
+#include <stdarg.h>
+#include "circbuf.h"
 
 
 int buf_init (circbuf_t * buf, unsigned int size)

@@ -3,6 +3,7 @@
  * Daowei Fan
  */
 #include "def.h"
+#include "wm_list.h"
  
 #ifndef _DEVICES_H_
 #define _DEVICES_H_

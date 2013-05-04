@@ -8,7 +8,6 @@
 /* Hardware includes. */
 #include "s3c2440x.h"
 #include "option.h"
-#include "uart.h"
 
 
 /*-----------------------------------------------------------*/

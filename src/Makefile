@@ -1,6 +1,6 @@
 obj-y				+= libcpu/
 obj-y				+= board/
-obj-y				+= driver/
+obj-y				+= drivers/
 obj-y				+= freertos/
 
 inc-y				+= include/
