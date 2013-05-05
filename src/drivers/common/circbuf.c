@@ -19,7 +19,7 @@
  */
 #include <string.h>
 #include <stdlib.h>
-#include <stdarg.h>
+#include <assert.h>
 #include "circbuf.h"
 
 

@@ -145,7 +145,6 @@ static void WDT_IRQHandler( void )
 		#if configUSE_PREEMPTION == 1
 		vTaskSwitchContext();
 		#endif
-		// uart0.putstring("freertos\n\r");
 		ClearSubPending(BIT_SUB_WDT);
 	}
 	/*  Clear pending bit -- Watchdog timer */

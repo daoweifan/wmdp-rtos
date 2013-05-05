@@ -1,6 +1,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "debug.h"
+#include "wm_error.h"
 #include "devices.h"
 #include "serial.h"
 #include "string.h"
@@ -34,14 +35,16 @@ struct s3c24x0serial
 	u32 baudrate;
 
 	/* isr field */
-	void (*pISR_init)(void);
+	void (* InitISR)(void);
 
 	/* reception field */
 	u16 save_index, read_index;
-	u8  rx_buf[CONFIG_UART0_RF_SZ];
+	u8  *pbuf;
 };
 
-struct s3c24x0serial serial0;
+/* serial0 device define and buffer allocate */
+static struct s3c24x0serial serial0;
+static u8 uart0_rx_buf[CONFIG_UART0_RF_SZ];
 
 /* local private function declare */
 static void serial0_isr_init(void);
@@ -54,20 +57,25 @@ static void serial0_isr_handler(void);
 static int wm_serial_init (wm_device_t dev)
 {
 	struct s3c24x0serial* serial = (struct s3c24x0serial*) dev;
-
-
 	int i;
+
 	/* global register protect, disable interrupt */
 	taskENTER_CRITICAL();
+
 	/* UART0, UART1 port configure */
 	rGPHCON |= 0xAA;
 	/* PULLUP is disable */
 	rGPHUP |= 0xF;
 	/* enable interrupt */
-	taskEXIT_CRITICAL();
 
-	/* FIFO disable, Tx/Rx FIFO clear */
-	serial->hw_base->ufcon = 0x0;
+	if ((dev->flag & WM_DEVICE_FLAG_DMA_RX) || \
+		(dev->flag & WM_DEVICE_FLAG_DMA_TX)) {
+		/* FIFO enable, just use it like DMA */
+		serial->hw_base->ufcon = 0x0001;
+	} else {
+		/* FIFO disable, Tx/Rx FIFO clear */
+		serial->hw_base->ufcon = 0x0000;
+	}
 	/* disable the flow control */
 	serial->hw_base->umcon = 0x0;
 	/* Normal,No parity,1 stop,8 bit */
@@ -78,17 +86,19 @@ static int wm_serial_init (wm_device_t dev)
 	 */
 	serial->hw_base->ucon = 0x105;
 	/* Set uart0 bps */
-	serial->hw_base->ubrd = (u32)(PCLK / (BPS * 16)) - 1;
+	serial->hw_base->ubrd = (u32)(PCLK / (serial->baudrate * 16)) - 1;
 	/* output PCLK to UART0/1, PWMTIMER */
 	rCLKCON |= 0x0D00;
 
 	for (i = 0; i < 100; i++);
 
 	if (dev->flag & WM_DEVICE_FLAG_INT_RX) {
-		memset(serial->rx_buf, 0, sizeof(serial->rx_buf));
+		memset(serial->pbuf, 0, sizeof(serial->pbuf));
 		serial->read_index = serial->save_index = 0;
-		serial->pISR_init();
+		serial->InitISR();
 	}
+
+	taskEXIT_CRITICAL();
 
 	dev->flag |= WM_DEVICE_FLAG_ACTIVATED;
 
@@ -127,35 +137,42 @@ static int wm_serial_read (wm_device_t dev, int pos, void* buffer, int size)
 		/* interrupt mode Rx */
 		while (size) {
 			if (serial->read_index != serial->save_index) {
-				*ptr++ = serial->rx_buf[serial->read_index];
+				*ptr++ = serial->pbuf[serial->read_index];
 				size --;
 
 				/* disable interrupt */
-				//taskENTER_CRITICAL();
+				taskENTER_CRITICAL();
 
 				serial->read_index ++;
 				if (serial->read_index >= CONFIG_UART0_RF_SZ)
 					serial->read_index = 0;
 
 				/* enable interrupt */
-				//taskEXIT_CRITICAL();
+				taskEXIT_CRITICAL();
 			} else {
 				/* set error code */
 				err_code = -WM_EEMPTY;
 				break;
 			}
 		}
-	} else {
-		/* polling mode */
-		while ((u32)ptr - (u32)buffer < size) {
-			while (serial->hw_base->ustat & USTAT_RCV_READY) {
-				*ptr = serial->hw_base->urxh & 0xff;
-				ptr ++;
-			}
+	} else if (dev->flag & WM_DEVICE_FLAG_DMA_RX) {
+		/* fifo polling mode, don't block */
+		while (serial->hw_base->ufstat & 0x003f) {
+			*ptr = serial->hw_base->urxh & 0xff;
+			ptr ++;
 		}
+	} else {
+		/* polling mode, don't block */
+		// while ((u32)ptr - (u32)buffer < size) {
+		while (serial->hw_base->ustat & USTAT_RCV_READY) {
+			*ptr = serial->hw_base->urxh & 0xff;
+			ptr ++;
+		}
+		// }
 	}
 
 	/* set error code */
+	wm_set_errno(err_code);
 	return (u32)ptr - (u32)buffer;
 }
 
@@ -166,24 +183,43 @@ static int wm_serial_write (wm_device_t dev, int pos, const void* buffer, int si
 	int err_code = WM_EOK;
 
 	/* polling mode */
-	while (size) {
-		/*
-		 * to be polite with serial console add a line feed
-		 * to the carriage return character
-		 */
-		if (*ptr == '\r' && (dev->flag & WM_DEVICE_FLAG_STREAM)) {
-			while (!(serial->hw_base->ustat & USTAT_TXB_EMPTY));
-			serial->hw_base->utxh = '\n';
+	if (dev->flag & WM_DEVICE_FLAG_DMA_TX) {
+		if (size < S3C24X0_UART_FIFO_SIZE - (serial->hw_base->ufstat & 0x3f00)) {
+			while (size) {
+				serial->hw_base->utxh = (*ptr & 0xFF);
+				++ptr;
+				--size;
+			}
+		} else {
+			while (size & (serial->hw_base->ufstat & 0x3f00) < S3C24X0_UART_FIFO_SIZE) {
+				serial->hw_base->utxh = (*ptr & 0xFF);
+				++ptr;
+				--size;
+			}
+			if (((u32)ptr - (u32)buffer) < size)
+				err_code = -WM_EEMPTY;
 		}
+	} else {
+		while (size) {
+			/*
+			 * to be polite with serial console add a line feed
+			 * to the carriage return character
+			 */
+			if (*ptr == '\r' && (dev->flag & WM_DEVICE_FLAG_STREAM)) {
+				while (!(serial->hw_base->ustat & USTAT_TXB_EMPTY));
+				serial->hw_base->utxh = '\n';
+			}
 
-		while (!(serial->hw_base->ustat & USTAT_TXB_EMPTY));
-		serial->hw_base->utxh = (*ptr & 0xFF);
+			while (!(serial->hw_base->ustat & USTAT_TXB_EMPTY));
+			serial->hw_base->utxh = (*ptr & 0xFF);
 
-		++ptr;
-		--size;
+			++ptr;
+			--size;
+		}
 	}
 
 	/* set error code */
+	wm_set_errno(err_code);
 	return (u32)ptr - (u32)buffer;
 }
 
@@ -221,7 +257,8 @@ int wm_hw_serial_init(void)
 	/* init serial0 device private data */
 	serial0.hw_base		= (uart_hw *) &U0BASE; 
 	serial0.baudrate	= CONFIG_UART0_BR;
-	serial0.pISR_init	= serial0_isr_init;
+	serial0.InitISR		= serial0_isr_init;
+	serial0.pbuf		= uart0_rx_buf;
 
 	/* set device virtual interface */
 	device->type 		= WM_Device_Class_Char;
@@ -237,12 +274,14 @@ int wm_hw_serial_init(void)
 	/* register uart0 on device subsystem */
 	result = wm_device_register(device, "uart0", \
 								WM_DEVICE_FLAG_RDWR | \
-								WM_DEVICE_FLAG_INT_RX | \
+								WM_DEVICE_FLAG_DMA_TX | \
+								WM_DEVICE_FLAG_DMA_RX | \
 								WM_DEVICE_FLAG_STREAM);
 
 	return result;
 }
 
+/* serial0 isr init, for every uart has a different init routine */
 static void serial0_isr_init(void)
 {
 	ClearPending(BIT_UART0);
@@ -252,6 +291,7 @@ static void serial0_isr_init(void)
 	EnableIrq(BIT_UART0);
 	EnableSubIrq(BIT_SUB_RXD0);
 }
+
 /* ISR for serial interrupt */
 static void serial0_isr_handler(void)
 {
@@ -263,7 +303,7 @@ static void serial0_isr_handler(void)
 
 	/* save on rx buffer */
 	while (serial->hw_base->ustat & USTAT_RCV_READY) {
-		serial->rx_buf[serial->save_index] = serial->hw_base->urxh & 0xff;
+		serial->pbuf[serial->save_index] = serial->hw_base->urxh & 0xff;
 		serial->save_index++;
 		if (serial->save_index >= CONFIG_UART0_RF_SZ)
 			serial->save_index = 0;
