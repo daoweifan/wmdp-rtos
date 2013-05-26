@@ -12,7 +12,7 @@ M ?= src/
 -include $(M)Makefile
 -include $(ENV_FILE)
 
-iar: iar_script detect_config iar_clr iar_cfg iar_inc iar_add
+iar: iar_copy iar_script detect_config iar_clr iar_cfg iar_inc iar_add
 	@echo "project/wmdp.ewp has been created!"
 
 iar_help:
@@ -40,6 +40,10 @@ iar_add:
 			make -s -C $(TOP_DIR) M=$(M)$$dir $@; \
 		fi \
 	done
+iar_copy:
+	@cp -f $(TOP_DIR)/project/iar_templete.ewp $(TOP_DIR)/project/wmdp.ewp
+	@cp -f $(TOP_DIR)/project/iar_templete.ewd $(TOP_DIR)/project/wmdp.ewd
+	@cp -f $(TOP_DIR)/project/iar_templete.eww $(TOP_DIR)/project/wmdp.eww
 
 #xconfig
 TKSCRIPTS_DIR = $(TOP_DIR)/scripts/tkconfig
