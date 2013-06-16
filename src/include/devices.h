@@ -125,3 +125,4 @@ int wm_device_write(wm_device_t dev, int pos, const void *buffer, int size);
 int wm_device_control(wm_device_t dev, u8 cmd, void *arg);
 
 #endif /* _DEVICES_H_ */
+

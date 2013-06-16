@@ -22,6 +22,7 @@ typedef unsigned long  u32;                   /* Unsigned 32 bit quantity       
 typedef signed   long  s32;                   /* Signed   32 bit quantity                           */
 typedef float          FP32;                     /* Single precision floating point                    */
 typedef double         FP64;                     /* Double precision floating point                    */
+typedef u8        boolean;
 
 typedef unsigned int   OS_STK;                   /* Each stack entry is 16-bit wide                    */
 typedef unsigned int   OS_CPU_SR;                /* Define size of CPU status register (PSR = 32 bits) */

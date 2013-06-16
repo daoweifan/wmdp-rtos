@@ -5,17 +5,21 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "serial.h"
+#include "kservice.h"
 
 extern void s3c2440_isr_Init(void);
 extern void WDT_IRQInit(unsigned int wTicksPerSec);
 
-static void print_Hello( void *pvParameters );
-static void print_Haha( void *pvParameters );
+static void print_Hello( void *pvParameters ); 
+// static void print_Haha( void *pvParameters );
 
 void board_Init(void)
 {
 	s3c2440_isr_Init();
 	wm_hw_serial_init();
+
+	/*init all registed devices */
+	wm_device_init_all();
 }
 
 void main(void)
@@ -35,21 +39,19 @@ void main(void)
 static void print_Hello( void *pvParameters )
 {
 	(void *)pvParameters;
-	int num = 0;
 	u8 str[] = "here i am, this is me!";
 	wm_device_t uart;
 	uart = wm_device_find_by_name("uart0");
 	wm_device_init(uart);
 	wm_device_write(uart, 0, "this device serial\r", sizeof("this device serial\r"));
+	wm_console_set_device("uart0");
 	for(;;)
 	{
 		/* Delay for half the flash period then turn the LED on. */
 		vTaskDelay(100);
 		// num = wm_device_read(uart, 0, str, 16);
-		wm_device_write(uart, 0, str, num++);
-		wm_device_write(uart, 0, "\n\r", 2);
-		if (num >= 16)
-			num = 0;
+		wm_kprintf("%s, %d \n\r", str, xTaskGetTickCount());
+		
 	}
 }
 #if 0
