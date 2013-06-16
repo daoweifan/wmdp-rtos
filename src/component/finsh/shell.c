@@ -3,26 +3,12 @@
  * This file is part of RT-Thread RTOS
  * COPYRIGHT (C) 2006, RT-Thread Development Team
  *
- * The license and distribution terms for this file may be
- * found in the file LICENSE in this distribution or at
- * http://www.rt-thread.org/license/LICENSE
- *
  * Change Logs:
  * Date           Author       Notes
  * 2006-04-30     Bernard      the first verion for FinSH
- * 2006-05-08     Bernard      change finsh thread stack to 2048
- * 2006-06-03     Bernard      add support for skyeye
- * 2006-09-24     Bernard      remove the code related with hardware
- * 2010-01-18     Bernard      fix down then up key bug.
- * 2010-03-19     Bernard      fix backspace issue and fix device read in shell.
- * 2010-04-01     Bernard      add prompt output when start and remove the empty history
- * 2011-02-23     Bernard      fix variable section end issue of finsh shell
- *                             initialization when use GNU GCC compiler.
  */
 
-#include <rtthread.h>
-#include <rthw.h>
-
+#include <string.h>
 #include "finsh.h"
 #include "shell.h"
 
@@ -32,81 +18,12 @@ ALIGN(RT_ALIGN_SIZE)
 static char finsh_thread_stack[FINSH_THREAD_STACK_SIZE];
 struct finsh_shell* shell;
 
-#if !defined (RT_USING_NEWLIB) && !defined (RT_USING_MINILIBC)
-int strcmp (const char *s1, const char *s2)
+static int finsh_rx_ind(wm_device_t dev, int size)
 {
-	while (*s1 && *s1 == *s2) s1++, s2++;
+	RT_ASSERT(shell != WM_NULL);
 
-	return (*s1 - *s2);
-}
-
-#ifdef RT_USING_HEAP
-char *strdup(const char *s)
-{
-	size_t len = strlen(s) + 1;
-	char *tmp = (char *)rt_malloc(len);
-
-	if(!tmp) return NULL;
-
-	rt_memcpy(tmp, s, len);
-	return tmp;
-}
-#endif
-
-#if !defined(__CC_ARM) && !defined(__IAR_SYSTEMS_ICC__)
-int isalpha( int ch )
-{
-	return (unsigned int)((ch | 0x20) - 'a') < 26u;
-}
-
-int atoi(const char* s)
-{
-	long int v=0;
-	int sign=1;
-	while ( *s == ' '  ||  (unsigned int)(*s - 9) < 5u) s++;
-
-	switch (*s)
-	{
-	case '-': sign=-1;
-	case '+': ++s;
-	}
-
-	while ((unsigned int) (*s - '0') < 10u)
-	{
-		v=v*10+*s-'0'; ++s;
-	}
-
-	return sign==-1?-v:v;
-}
-
-int isprint(unsigned char ch)
-{
-    return (unsigned int)(ch - ' ') < 127u - ' ';
-}
-#endif
-#endif
-
-#if defined(RT_USING_DFS) && defined(DFS_USING_WORKDIR)
-#include <dfs_posix.h>
-const char* finsh_get_prompt()
-{
-	#define _PROMPT "finsh "
-	static char finsh_prompt[RT_CONSOLEBUF_SIZE + 1] = {_PROMPT};
-	
-	/* get current working directory */
-	getcwd(&finsh_prompt[6], RT_CONSOLEBUF_SIZE - 8);
-	strcat(finsh_prompt, ">");
-
-	return finsh_prompt;
-}
-#endif
-
-static rt_err_t finsh_rx_ind(rt_device_t dev, rt_size_t size)
-{
-	RT_ASSERT(shell != RT_NULL);
-
-	/* release semaphore to let finsh thread rx data */
-	rt_sem_release(&shell->rx_sem);
+	// /* release semaphore to let finsh thread rx data */
+	// rt_sem_release(&shell->rx_sem);
 
 	return RT_EOK;
 }
@@ -120,16 +37,16 @@ static rt_err_t finsh_rx_ind(rt_device_t dev, rt_size_t size)
  */
 void finsh_set_device(const char* device_name)
 {
-	rt_device_t dev = RT_NULL;
+	wm_device_t dev = WM_NULL;
 
-	RT_ASSERT(shell != RT_NULL);
-	dev = rt_device_find(device_name);
-	if (dev != RT_NULL && rt_device_open(dev, RT_DEVICE_OFLAG_RDWR) == RT_EOK)
+	RT_ASSERT(shell != WM_NULL);
+	dev = wm_device_find(device_name);
+	if (dev != WM_NULL && wm_device_open(dev, WM_DEVICE_OFLAG_RDWR) == RT_EOK)
 	{
-		if (shell->device != RT_NULL)
+		if (shell->device != WM_NULL)
 		{
 			/* close old finsh device */
-			rt_device_close(shell->device);
+			wm_device_close(shell->device);
 		}
 
 		shell->device = dev;
@@ -150,8 +67,8 @@ void finsh_set_device(const char* device_name)
  */
 const char* finsh_get_device()
 {
-	RT_ASSERT(shell != RT_NULL);
-	return shell->device->parent.name;
+	RT_ASSERT(shell != WM_NULL);
+	return shell->device->name;
 }
 
 /**
@@ -163,9 +80,9 @@ const char* finsh_get_device()
  *
  * @param echo the echo mode
  */
-void finsh_set_echo(rt_uint32_t echo)
+void finsh_set_echo(u32 echo)
 {
-	RT_ASSERT(shell != RT_NULL);
+	RT_ASSERT(shell != WM_NULL);
 	shell->echo_mode = echo;
 }
 
@@ -176,9 +93,9 @@ void finsh_set_echo(rt_uint32_t echo)
  *
  * @return the echo mode
  */
-rt_uint32_t finsh_get_echo()
+u32 finsh_get_echo()
 {
-	RT_ASSERT(shell != RT_NULL);
+	RT_ASSERT(shell != WM_NULL);
 
 	return shell->echo_mode;
 }
@@ -246,7 +163,7 @@ rt_bool_t finsh_handle_history(struct finsh_shell* shell, char ch)
 	if (ch == 0x1b)
 	{
 		shell->stat = WAIT_SPEC_KEY;
-		return RT_TRUE;
+		return True;
 	}
 
 	if ((shell->stat == WAIT_SPEC_KEY))
@@ -254,11 +171,11 @@ rt_bool_t finsh_handle_history(struct finsh_shell* shell, char ch)
 		if (ch == 0x5b)
 		{
 			shell->stat = WAIT_FUNC_KEY;
-			return RT_TRUE;
+			return True;
 		}
 
 		shell->stat = WAIT_NORMAL;
-		return RT_FALSE;
+		return False;
 	}
 
 	if (shell->stat == WAIT_FUNC_KEY)
@@ -272,7 +189,7 @@ rt_bool_t finsh_handle_history(struct finsh_shell* shell, char ch)
 			else
 			{
 				shell->current_history = 0;
-				return RT_TRUE;
+				return True;
 			}
 
 			/* copy the history command */
@@ -293,7 +210,7 @@ rt_bool_t finsh_handle_history(struct finsh_shell* shell, char ch)
 				{
 					shell->current_history = shell->history_count - 1;
 				}
-				else return RT_TRUE;
+				else return True;
 			}
 
 			memcpy(shell->line, &shell->cmd_history[shell->current_history][0],
@@ -306,11 +223,11 @@ rt_bool_t finsh_handle_history(struct finsh_shell* shell, char ch)
 		{
 			rt_kprintf("\033[2K\r");
 			rt_kprintf("%s%s", FINSH_PROMPT, shell->line);
-			return RT_TRUE;;
+			return True;;
 		}
 	}
 
-	return RT_FALSE;
+	return False;
 }
 
 void finsh_push_history(struct finsh_shell* shell)
@@ -346,9 +263,9 @@ void finsh_push_history(struct finsh_shell* shell)
 }
 #endif
 
-#ifndef RT_USING_HEAP
+
 struct finsh_shell _shell;
-#endif
+
 void finsh_thread_entry(void* parameter)
 {
     char ch;
@@ -369,7 +286,7 @@ void finsh_thread_entry(void* parameter)
 		{
 			/* handle history key */
 			#ifdef FINSH_USING_HISTORY
-			if (finsh_handle_history(shell, ch) == RT_TRUE) continue;
+			if (finsh_handle_history(shell, ch) == True) continue;
 			#endif
 
 			/* handle CR key */
@@ -464,35 +381,14 @@ void finsh_system_init(void)
 	rt_err_t result;
 
 #ifdef FINSH_USING_SYMTAB
-#ifdef __CC_ARM                 /* ARM C Compiler */
-    extern const int FSymTab$$Base;
-    extern const int FSymTab$$Limit;
-    extern const int VSymTab$$Base;
-    extern const int VSymTab$$Limit;
-	finsh_system_function_init(&FSymTab$$Base, &FSymTab$$Limit);
-	finsh_system_var_init(&VSymTab$$Base, &VSymTab$$Limit);
-#elif defined (__ICCARM__)      /* for IAR Compiler */
-    finsh_system_function_init(__section_begin("FSymTab"),
-                               __section_end("FSymTab"));
-    finsh_system_var_init(__section_begin("VSymTab"),
-                          __section_end("VSymTab"));
-#elif defined (__GNUC__)        /* GNU GCC Compiler */
-	extern const int __fsymtab_start;
-	extern const int __fsymtab_end;
-	extern const int __vsymtab_start;
-	extern const int __vsymtab_end;
-	finsh_system_function_init(&__fsymtab_start, &__fsymtab_end);
-	finsh_system_var_init(&__vsymtab_start, &__vsymtab_end);
-#endif
+	finsh_system_function_init(__section_begin("FSymTab"), __section_end("FSymTab"));
+	finsh_system_var_init(__section_begin("VSymTab"), __section_end("VSymTab"));
 #endif
 
 	/* create or set shell structure */
-#ifdef RT_USING_HEAP
-	shell = (struct finsh_shell*)rt_malloc(sizeof(struct finsh_shell));
-#else
 	shell = &_shell;
-#endif
-	if (shell == RT_NULL)
+
+	if (shell == WM_NULL)
 	{
 		rt_kprintf("no memory for shell\n");
 		return;
@@ -503,7 +399,7 @@ void finsh_system_init(void)
 	rt_sem_init(&(shell->rx_sem), "shrx", 0, 0);
 	result = rt_thread_init(&finsh_thread,
 		"tshell",
-		finsh_thread_entry, RT_NULL,
+		finsh_thread_entry, WM_NULL,
 		&finsh_thread_stack[0], sizeof(finsh_thread_stack),
 		FINSH_THREAD_PRIORITY, 10);
 

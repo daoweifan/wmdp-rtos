@@ -14,7 +14,7 @@
 #ifndef __FINSH_H__
 #define __FINSH_H__
 
-#include <rtthread.h>
+#include "def.h"
 
 /* -- the beginning of option -- */
 #define FINSH_NAME_MAX          16      /* max length of identifier */

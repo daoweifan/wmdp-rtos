@@ -15,7 +15,13 @@
 #ifndef __SHELL_H__
 #define __SHELL_H__
 
-#include <rtthread.h>
+#include "config.h"
+#include "finsh.h"
+#include "devices.h"
+#include "def.h"
+#include "FreeRTOS.h"
+#include "semphr.h"
+#include "task.h"
 
 #define FINSH_USING_HISTORY
 #ifndef FINSH_THREAD_PRIORITY
@@ -27,12 +33,8 @@
 #define FINSH_CMD_SIZE		80
 
 #define FINSH_OPTION_ECHO	0x01
-#if defined(RT_USING_DFS) && defined(DFS_USING_WORKDIR)
-#define FINSH_PROMPT		finsh_get_prompt()
-const char* finsh_get_prompt(void);
-#else
+
 #define FINSH_PROMPT		"finsh>>"
-#endif
 
 #ifdef FINSH_USING_HISTORY
 enum input_stat
@@ -48,16 +50,17 @@ enum input_stat
 
 struct finsh_shell
 {
-	struct rt_semaphore rx_sem;
+	// struct rt_semaphore rx_sem;
+	xSemaphoreHandle rx_sem;
 
 	enum input_stat stat;
 
-	rt_uint8_t echo_mode:1;
-	rt_uint8_t use_history:1;
+	u8 echo_mode:1;
+	u8 use_history:1;
 
 #ifdef FINSH_USING_HISTORY
-	rt_uint8_t current_history;
-	rt_uint16_t history_count;
+	u8 current_history;
+	u16 history_count;
 
 	char cmd_history[FINSH_HISTORY_LINES][FINSH_CMD_SIZE];
 #endif
@@ -65,13 +68,13 @@ struct finsh_shell
 	struct finsh_parser parser;
 
 	char line[FINSH_CMD_SIZE];
-	rt_uint8_t line_position;
+	u8 line_position;
 
-	rt_device_t device;
+	wm_device_t device;
 };
 
-void finsh_set_echo(rt_uint32_t echo);
-rt_uint32_t finsh_get_echo(void);
+void finsh_set_echo(u32 echo);
+u32 finsh_get_echo(void);
 
 void finsh_set_device(const char* device_name);
 const char* finsh_get_device(void);
