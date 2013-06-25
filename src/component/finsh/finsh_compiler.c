@@ -18,6 +18,8 @@
 #include "finsh_var.h"
 #include "finsh_ops.h"
 
+#define uchar unsigned char
+
 union finsh_value*	finsh_compile_sp;		/* stack pointer */
 u_char*				finsh_compile_pc;		/* PC */
 

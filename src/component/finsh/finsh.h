@@ -59,29 +59,10 @@ typedef unsigned char  u_char;
 typedef unsigned short u_short;
 typedef unsigned long  u_long;
 
-#if !defined(__CC_ARM) && !defined(__IAR_SYSTEMS_ICC__)
-typedef unsigned int size_t;
-
-#ifndef NULL
-#define NULL RT_NULL
-#endif
-
-#define memset	rt_memset
-#define strlen	rt_strlen
-#define strncpy	rt_strncpy
-#define strncmp	rt_strncmp
-
-int strcmp (const char *s1, const char *s2);
-char *strdup(const char *s);
-
-int isalpha( int ch );
-int atoi(const char* s);
-#else
 /* use libc of armcc */
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-#endif
 #endif
 
 #define FINSH_VERSION_MAJOR			0

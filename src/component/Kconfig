@@ -3,3 +3,8 @@
 #
 # Written by daowei@2013
 #
+mainmenu_option next_comment
+	comment 'finsh shell config'
+	source src/component/finsh/Kconfig
+endmenu
+

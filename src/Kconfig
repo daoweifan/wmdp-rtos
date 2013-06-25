@@ -22,6 +22,11 @@ mainmenu_option next_comment
 endmenu
 
 mainmenu_option next_comment
+  comment 'component'
+  source src/component/Kconfig
+endmenu
+
+mainmenu_option next_comment
   comment 'freertos'
   source src/freertos/Kconfig
 endmenu
