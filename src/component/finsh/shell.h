@@ -50,7 +50,6 @@ enum input_stat
 
 struct finsh_shell
 {
-	// struct rt_semaphore rx_sem;
 	xSemaphoreHandle rx_sem;
 
 	enum input_stat stat;
