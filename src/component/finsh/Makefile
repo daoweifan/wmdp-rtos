@@ -1,0 +1,13 @@
+obj-$(CONFIG_COMPONENT_FINSH) += cmd.o
+obj-$(CONFIG_COMPONENT_FINSH) += finsh_compiler.o
+obj-$(CONFIG_COMPONENT_FINSH) += finsh_error.o
+obj-$(CONFIG_COMPONENT_FINSH) += finsh_heap.o
+obj-$(CONFIG_COMPONENT_FINSH) += finsh_init.o
+obj-$(CONFIG_COMPONENT_FINSH) += finsh_node.o
+obj-$(CONFIG_COMPONENT_FINSH) += finsh_ops.o
+obj-$(CONFIG_COMPONENT_FINSH) += finsh_parser.o
+obj-$(CONFIG_COMPONENT_FINSH) += finsh_token.o
+obj-$(CONFIG_COMPONENT_FINSH) += finsh_var.o
+obj-$(CONFIG_COMPONENT_FINSH) += finsh_vm.o
+obj-$(CONFIG_COMPONENT_FINSH) += shell.o
+obj-$(CONFIG_COMPONENT_FINSH) += symbol.o

@@ -1,0 +1,7 @@
+#
+# bldc configuration written in linux configuration language
+#
+# Written by daoweifan@2010
+#
+
+bool "enable finsh shell module" CONFIG_COMPONENT_FINSH
