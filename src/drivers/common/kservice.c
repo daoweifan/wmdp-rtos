@@ -86,3 +86,4 @@ void wm_kprintf(const char *fmt, ...)
 	wm_device_write(_console_device, 0, wm_log_buf, length);
 	va_end(ap);
 }
+

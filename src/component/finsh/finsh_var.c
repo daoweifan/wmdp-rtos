@@ -11,7 +11,7 @@
  * Date           Author       Notes
  * 2010-03-22     Bernard      first version
  */
-#include <finsh.h>
+#include "finsh.h"
 #include "finsh_var.h"
 
 struct finsh_var global_variable[FINSH_VARIABLE_MAX];

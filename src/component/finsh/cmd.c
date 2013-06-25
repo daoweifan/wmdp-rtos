@@ -11,28 +11,10 @@
  * Date           Author       Notes
  * 2006-04-30     Bernard      first implementation
  */
-
+#include <string.h>
 #include "wm_list.h"
 #include "finsh.h"
-
-// Copy from kservice.h because we can not use it out of the kernel.
-// Ugly. Should let kservice.h avaliable for applications?
-static inline int rt_list_isempty(const struct list_head *l)
-{
-	return l->next == l;
-}
-
-static inline unsigned int rt_list_len(const struct list_head *l)
-{
-	unsigned int len = 0;
-	const struct list_head *p = l;
-	while( p->next != l )
-	{
-		p = p->next;
-		len++;
-	}
-	return len;
-}
+#include "kservice.h"
 
 long hello(void)
 {
@@ -164,7 +146,7 @@ void list_prefix(char* prefix)
 {
 	struct finsh_syscall_item* syscall_item;
 	struct finsh_sysvar_item*  sysvar_item;
-	rt_uint16_t func_cnt, var_cnt;
+	u16 func_cnt, var_cnt;
 	const char* name_ptr;
 
 	func_cnt = 0;
@@ -252,7 +234,7 @@ void list_prefix(char* prefix)
 	/* only one matched */
 	if ((func_cnt + var_cnt) == 1)
 	{
-		rt_strncpy(prefix, name_ptr, strlen(name_ptr));
+		strncpy(prefix, name_ptr, strlen(name_ptr));
 	}
 }
 

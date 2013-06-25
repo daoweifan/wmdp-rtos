@@ -14,7 +14,7 @@
 #ifndef __FINSH_VM_H__
 #define __FINSH_VM_H__
 
-#include <finsh.h>
+#include "finsh.h"
 
 #include "finsh_var.h"
 

@@ -16,6 +16,8 @@
 
 #include "def.h"
 
+#define RT_NULL 0
+
 /* -- the beginning of option -- */
 #define FINSH_NAME_MAX          16      /* max length of identifier */
 #define FINSH_NODE_MAX          16      /* max number of node */
@@ -30,8 +32,8 @@
 #define HEAP_ALIGNMENT          4       /* heap alignment */
 
 #define FINSH_GET16(x)    (*(x)) | (*((x)+1) << 8)
-#define FINSH_GET32(x)    (rt_uint32_t)(*(x)) | ((rt_uint32_t)*((x)+1) << 8) | \
-    ((rt_uint32_t)*((x)+2) << 16) | ((rt_uint32_t)*((x)+3) << 24)
+#define FINSH_GET32(x)    (u32)(*(x)) | ((u32)*((x)+1) << 8) | \
+    ((u32)*((x)+2) << 16) | ((u32)*((x)+3) << 24)
 
 #define FINSH_SET16(x, v)           \
     do                              \
@@ -43,10 +45,10 @@
 #define FINSH_SET32(x, v)                                       \
     do                                                          \
     {                                                           \
-        *(x)     = (rt_uint32_t)(v)  & 0x000000ff;              \
-        (*((x)+1)) = ((rt_uint32_t)(v) >> 8) & 0x000000ff;      \
-        (*((x)+2)) = ((rt_uint32_t)(v) >> 16) & 0x000000ff;     \
-        (*((x)+3)) = ((rt_uint32_t)(v) >> 24);                  \
+        *(x)     = (u32)(v)  & 0x000000ff;              \
+        (*((x)+1)) = ((u32)(v) >> 8) & 0x000000ff;      \
+        (*((x)+2)) = ((u32)(v) >> 16) & 0x000000ff;     \
+        (*((x)+3)) = ((u32)(v) >> 24);                  \
     } while ( 0 )
 
 /* -- the end of option -- */

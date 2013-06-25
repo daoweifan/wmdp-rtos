@@ -11,6 +11,8 @@
 #include <string.h>
 #include "finsh.h"
 #include "shell.h"
+#include "debug.h"
+#include "kservice.h"
 
 /* finsh thread */
 static xTaskHandle finsh_thread;
@@ -39,7 +41,7 @@ void finsh_set_device(const char* device_name)
 	wm_device_t dev = WM_NULL;
 
 	WM_ASSERT(shell != WM_NULL);
-	dev = wm_device_find(device_name);
+	dev = wm_device_find_by_name(device_name);
 	if (dev != WM_NULL && wm_device_open(dev, WM_DEVICE_OFLAG_RDWR) == WM_EOK) {
 		if (shell->device != WM_NULL) {
 			/* close old finsh device */
@@ -263,7 +265,7 @@ void finsh_thread_entry(void* parameter)
 			if (ch == '\r') {
 				char next;
 
-				if (rt_device_read(shell->device, 0, &next, 1) == 1)
+				if (wm_device_read(shell->device, 0, &next, 1) == 1)
 					ch = next;
 				else ch = '\r';
 			} else if (ch == '\t') {
@@ -366,6 +368,6 @@ void finsh_system_init(void)
 						  NULL, tskIDLE_PRIORITY + 3, \
 						  &finsh_thread);
 
-	if (result == pdPASS)
-		rt_thread_startup(&finsh_thread);
+	// if (result == pdPASS)
+		// rt_thread_startup(&finsh_thread);
 }

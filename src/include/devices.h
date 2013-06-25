@@ -126,3 +126,4 @@ int wm_device_control(wm_device_t dev, u8 cmd, void *arg);
 
 #endif /* _DEVICES_H_ */
 
+
