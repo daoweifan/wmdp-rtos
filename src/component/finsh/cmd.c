@@ -24,10 +24,10 @@ long hello(void)
 }
 FINSH_FUNCTION_EXPORT(hello, say hello world);
 
-extern void rt_show_version(void);
+// extern void rt_show_version(void);
 long version(void)
 {
-	rt_show_version();
+	wm_kprintf("WMDP, VERSION1.0 2013-06-25\n");
 
 	return 0;
 }

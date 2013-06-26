@@ -247,12 +247,12 @@ void finsh_thread_entry(void* parameter)
 	/* normal is echo mode */
 	shell->echo_mode = 1;
 
-    finsh_init(&shell->parser);
+	finsh_init(&shell->parser);
 	wm_kprintf(FINSH_PROMPT);
 
 	while (1) {
 		/* wait receive */
-		if (xSemaphoreTake(shell->rx_sem, portMAX_DELAY) != pdTRUE) continue;
+		// if (xSemaphoreTake(shell->rx_sem, portMAX_DELAY) != pdTRUE) continue;q
 
 		/* read one character from device */
 		while (wm_device_read(shell->device, 0, &ch, 1) == 1) {
@@ -360,12 +360,13 @@ void finsh_system_init(void)
 	/* create or set shell structure */
 	shell = &_shell;
 	memset(shell, 0, sizeof(struct finsh_shell));
+	finsh_set_device("uart0");
 
 	shell->rx_sem = xSemaphoreCreateMutex();
 	result = xTaskCreate( finsh_thread_entry, \
 						  "tshell", \
 						  FINSH_THREAD_STACK_SIZE, \
-						  NULL, tskIDLE_PRIORITY + 3, \
+						  NULL, tskIDLE_PRIORITY + 5, \
 						  &finsh_thread);
 
 	// if (result == pdPASS)

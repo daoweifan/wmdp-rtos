@@ -11,11 +11,12 @@
  * Date           Author       Notes
  * 2010-03-22     Bernard      first version
  */
+#include "config.h"
 #include "finsh.h"
 
 #include "finsh_var.h"
 
-// ALIGN(RT_ALIGN_SIZE)
+ALIGN(4)
 u_char finsh_heap[FINSH_HEAP_MAX];
 struct finsh_block_header
 {
