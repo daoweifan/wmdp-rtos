@@ -10,6 +10,8 @@
 extern void s3c2440_isr_Init(void);
 extern void WDT_IRQInit(unsigned int wTicksPerSec);
 
+extern void finsh_system_init(void);
+
 static void print_Hello( void *pvParameters ); 
 // static void print_Haha( void *pvParameters );
 
@@ -20,6 +22,11 @@ void board_Init(void)
 
 	/*init all registed devices */
 	wm_device_init_all();
+
+	wm_device_t uart;
+	uart = wm_device_find_by_name("uart0");
+	wm_device_init(uart);
+	wm_console_set_device("uart0");
 }
 
 void main(void)
@@ -30,6 +37,7 @@ void main(void)
 	xTaskCreate( print_Hello, "hello", 128, NULL, tskIDLE_PRIORITY + 3, ( xTaskHandle * ) NULL );
 	// xTaskCreate( print_haha, "haha", 128, NULL, tskIDLE_PRIORITY + 4, ( xTaskHandle * ) NULL );
 	/* Start the scheduler. */
+	finsh_system_init();
 	vTaskStartScheduler();
 
 	/* We should never get here as control is now taken by the scheduler. */

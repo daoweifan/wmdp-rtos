@@ -186,12 +186,18 @@ static int wm_serial_write (wm_device_t dev, int pos, const void* buffer, int si
 	if (dev->flag & WM_DEVICE_FLAG_DMA_TX) {
 		if (size < S3C24X0_UART_FIFO_SIZE - (serial->hw_base->ufstat & 0x3f00)) {
 			while (size) {
+				if (*ptr == '\n') {
+					serial->hw_base->utxh = '\r';
+				}
 				serial->hw_base->utxh = (*ptr & 0xFF);
 				++ptr;
 				--size;
 			}
 		} else {
 			while (size & (serial->hw_base->ufstat & 0x3f00) < S3C24X0_UART_FIFO_SIZE) {
+				if (*ptr == '\n') {
+					serial->hw_base->utxh = '\r';
+				}
 				serial->hw_base->utxh = (*ptr & 0xFF);
 				++ptr;
 				--size;
@@ -205,9 +211,9 @@ static int wm_serial_write (wm_device_t dev, int pos, const void* buffer, int si
 			 * to be polite with serial console add a line feed
 			 * to the carriage return character
 			 */
-			if (*ptr == '\r' && (dev->flag & WM_DEVICE_FLAG_STREAM)) {
+			if (*ptr == '\n' && (dev->flag & WM_DEVICE_FLAG_STREAM)) {
 				while (!(serial->hw_base->ustat & USTAT_TXB_EMPTY));
-				serial->hw_base->utxh = '\n';
+				serial->hw_base->utxh = '\r';
 			}
 
 			while (!(serial->hw_base->ustat & USTAT_TXB_EMPTY));
