@@ -188,6 +188,8 @@ static int wm_serial_write (wm_device_t dev, int pos, const void* buffer, int si
 			while (size) {
 				if (*ptr == '\n') {
 					serial->hw_base->utxh = '\r';
+					if ((serial->hw_base->ufstat & 0x3f00) == S3C24X0_UART_FIFO_SIZE)
+						break;
 				}
 				serial->hw_base->utxh = (*ptr & 0xFF);
 				++ptr;
@@ -197,6 +199,8 @@ static int wm_serial_write (wm_device_t dev, int pos, const void* buffer, int si
 			while (size & (serial->hw_base->ufstat & 0x3f00) < S3C24X0_UART_FIFO_SIZE) {
 				if (*ptr == '\n') {
 					serial->hw_base->utxh = '\r';
+					if ((serial->hw_base->ufstat & 0x3f00) == S3C24X0_UART_FIFO_SIZE)
+						break;
 				}
 				serial->hw_base->utxh = (*ptr & 0xFF);
 				++ptr;

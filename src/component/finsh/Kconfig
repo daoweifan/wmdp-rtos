@@ -5,3 +5,13 @@
 #
 
 bool "enable finsh shell module" CONFIG_COMPONENT_FINSH
+
+if [ "$CONFIG_COMPONENT_FINSH" = "y" ]; then
+	choice 'default finsh shell select'	" \
+		UARTg	CONFIG_FINSH_UARTg \
+		UART0	CONFIG_FINSH_UART0 \
+		UART1	CONFIG_FINSH_UART1 \
+		UART2	CONFIG_FINSH_UART2 \
+	" UART0
+fi
+

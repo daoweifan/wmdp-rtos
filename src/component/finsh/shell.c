@@ -350,8 +350,6 @@ void finsh_system_var_init(const void* begin, const void* end)
  */
 void finsh_system_init(void)
 {
-	portBASE_TYPE result;
-
 #ifdef FINSH_USING_SYMTAB
 	finsh_system_function_init(__section_begin("FSymTab"), __section_end("FSymTab"));
 	finsh_system_var_init(__section_begin("VSymTab"), __section_end("VSymTab"));
@@ -360,15 +358,14 @@ void finsh_system_init(void)
 	/* create or set shell structure */
 	shell = &_shell;
 	memset(shell, 0, sizeof(struct finsh_shell));
+#if CONFIG_FINSH_UART0
 	finsh_set_device("uart0");
+#endif
 
 	shell->rx_sem = xSemaphoreCreateMutex();
-	result = xTaskCreate( finsh_thread_entry, \
+	xTaskCreate( finsh_thread_entry, \
 						  "tshell", \
 						  FINSH_THREAD_STACK_SIZE, \
 						  NULL, tskIDLE_PRIORITY + 5, \
 						  &finsh_thread);
-
-	// if (result == pdPASS)
-		// rt_thread_startup(&finsh_thread);
 }
