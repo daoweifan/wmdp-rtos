@@ -157,18 +157,26 @@ static int wm_serial_read (wm_device_t dev, int pos, void* buffer, int size)
 		}
 	} else if (dev->flag & WM_DEVICE_FLAG_DMA_RX) {
 		/* fifo polling mode, don't block */
-		while (serial->hw_base->ufstat & 0x003f) {
-			*ptr = serial->hw_base->urxh & 0xff;
-			ptr ++;
+		while (size) {
+			if (serial->hw_base->ufstat & 0x003f) {
+				*ptr = serial->hw_base->urxh & 0xff;
+				ptr ++;
+				size --;
+			} else {
+				break;
+			}
 		}
 	} else {
 		/* polling mode, don't block */
-		// while ((u32)ptr - (u32)buffer < size) {
-		while (serial->hw_base->ustat & USTAT_RCV_READY) {
-			*ptr = serial->hw_base->urxh & 0xff;
-			ptr ++;
+		while (size) {
+			if (serial->hw_base->ustat & USTAT_RCV_READY) {
+				*ptr = serial->hw_base->urxh & 0xff;
+				ptr ++;
+				size --;
+			} else {
+				break;
+			}
 		}
-		// }
 	}
 
 	/* set error code */
