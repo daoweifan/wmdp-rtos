@@ -70,8 +70,8 @@ static int wm_serial_init (wm_device_t dev)
 
 	if ((dev->flag & WM_DEVICE_FLAG_DMA_RX) || \
 		(dev->flag & WM_DEVICE_FLAG_DMA_TX)) {
-		/* FIFO enable, just use it like DMA */
-		serial->hw_base->ufcon = 0x0001;
+		/* FIFO enable, clear fifo, just use it like DMA */
+		serial->hw_base->ufcon = 0x0007;
 	} else {
 		/* FIFO disable, Tx/Rx FIFO clear */
 		serial->hw_base->ufcon = 0x0000;
@@ -182,33 +182,19 @@ static int wm_serial_write (wm_device_t dev, int pos, const void* buffer, int si
 	u8* ptr = (u8 *)buffer;
 	int err_code = WM_EOK;
 
-	/* polling mode */
+	/* polling mode, FIFO, blocking */
 	if (dev->flag & WM_DEVICE_FLAG_DMA_TX) {
-		if (size < S3C24X0_UART_FIFO_SIZE - (serial->hw_base->ufstat & 0x3f00)) {
-			while (size) {
-				if (*ptr == '\n') {
-					serial->hw_base->utxh = '\r';
-					if ((serial->hw_base->ufstat & 0x3f00) == S3C24X0_UART_FIFO_SIZE)
-						break;
-				}
-				serial->hw_base->utxh = (*ptr & 0xFF);
-				++ptr;
-				--size;
+		while (size) {
+			while (serial->hw_base->ufstat & 0x4000);
+			if ((*ptr == '\n') && (dev->flag & WM_DEVICE_FLAG_STREAM)) {
+				serial->hw_base->utxh = '\r';
+				while (serial->hw_base->ufstat & 0x4000);
 			}
-		} else {
-			while (size & (serial->hw_base->ufstat & 0x3f00) < S3C24X0_UART_FIFO_SIZE) {
-				if (*ptr == '\n') {
-					serial->hw_base->utxh = '\r';
-					if ((serial->hw_base->ufstat & 0x3f00) == S3C24X0_UART_FIFO_SIZE)
-						break;
-				}
-				serial->hw_base->utxh = (*ptr & 0xFF);
-				++ptr;
-				--size;
-			}
-			if (((u32)ptr - (u32)buffer) < size)
-				err_code = -WM_EEMPTY;
+			serial->hw_base->utxh = (*ptr & 0xFF);
+			++ptr;
+			--size;
 		}
+	/* polling mode, non-FIFO, blocking */
 	} else {
 		while (size) {
 			/*
@@ -284,6 +270,8 @@ int wm_hw_serial_init(void)
 	/* register uart0 on device subsystem */
 	result = wm_device_register(device, "uart0", \
 								WM_DEVICE_FLAG_RDWR | \
+								WM_DEVICE_FLAG_DMA_TX | \
+								WM_DEVICE_FLAG_DMA_RX | \
 								WM_DEVICE_FLAG_STREAM);
 
 	return result;
