@@ -101,6 +101,7 @@ void list_prefix(char* prefix)
 	struct finsh_sysvar_item*  sysvar_item;
 	u16 func_cnt, var_cnt;
 	const char* name_ptr;
+	char syscall_flag = 0;
 
 	func_cnt = 0;
 	var_cnt  = 0;
@@ -112,6 +113,8 @@ void list_prefix(char* prefix)
 		{
 			if (str_is_prefix(prefix, index->name) == 0)
 			{
+				syscall_flag = 1;
+
 				if (func_cnt == 0)
 					wm_kprintf("--function:\n");
 
@@ -134,6 +137,7 @@ void list_prefix(char* prefix)
 	{
 		if (str_is_prefix(prefix, syscall_item->syscall.name) == 0)
 		{
+			syscall_flag = 1;
 			if (func_cnt == 0)
 				wm_kprintf("--function:\n");
 			func_cnt ++;
@@ -188,6 +192,9 @@ void list_prefix(char* prefix)
 	if ((func_cnt + var_cnt) == 1)
 	{
 		strncpy(prefix, name_ptr, strlen(name_ptr));
+		if (syscall_flag) {
+			strcat(prefix, "()");
+		}
 	}
 }
 
