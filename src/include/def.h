@@ -39,9 +39,6 @@ typedef unsigned int   OS_CPU_SR;                /* Define size of CPU status re
 #define U16_MAX                   0xffff          /* Maxium number of u16  */
 #define U32_MAX                   0xffffffff      /* Maxium number of u32  */
 
-#define False 0
-#define True !False
-
 #define WM_NULL                   ((void *)0)
 
 /* Sets the result on bPort */
