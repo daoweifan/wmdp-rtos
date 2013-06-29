@@ -251,8 +251,8 @@ void finsh_thread_entry(void* parameter)
 	wm_kprintf(FINSH_PROMPT);
 
 	while (1) {
-		/* wait receive */
-		// if (xSemaphoreTake(shell->rx_sem, portMAX_DELAY) != pdtrue) continue;q
+		/* give up the cpu time */
+		vTaskDelay(10);
 
 		/* read one character from device */
 		while (wm_device_read(shell->device, 0, &ch, 1) == 1) {
@@ -362,10 +362,10 @@ void finsh_system_init(void)
 	finsh_set_device("uart0");
 #endif
 
-	shell->rx_sem = xSemaphoreCreateMutex();
+	/* the priority of finsh should be lower for it's debug purpose */
 	xTaskCreate( finsh_thread_entry, \
 						  "tshell", \
-						  CONFIG_FINSH_THREAD_STACK_SIZE, \
-						  NULL, tskIDLE_PRIORITY + 5, \
+						  CONFIG_FINSH_TASK_STACK_SIZE, \
+						  NULL, tskIDLE_PRIORITY + CONFIG_FINSH_TASK_PRIORITY, \
 						  &finsh_thread);
 }
