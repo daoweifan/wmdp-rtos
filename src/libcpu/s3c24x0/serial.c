@@ -284,8 +284,6 @@ int wm_hw_serial_init(void)
 	/* register uart0 on device subsystem */
 	result = wm_device_register(device, "uart0", \
 								WM_DEVICE_FLAG_RDWR | \
-								WM_DEVICE_FLAG_DMA_TX | \
-								WM_DEVICE_FLAG_DMA_RX | \
 								WM_DEVICE_FLAG_STREAM);
 
 	return result;
