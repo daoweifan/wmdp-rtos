@@ -11,8 +11,9 @@
  * Date           Author       Notes
  * 2010-03-22     Bernard      first version
  */
+#include <stdlib.h>
+#include <string.h>
 #include "finsh.h"
-
 #include "finsh_vm.h"
 #include "finsh_ops.h"
 #include "finsh_var.h"
@@ -56,14 +57,12 @@ void finsh_vm_run()
 	}
 }
 
-#ifdef RT_USING_HEAP
-extern char *strdup(const char *s);
 void finsh_syscall_append(const char* name, syscall_func func)
 {
 	/* create the syscall */
 	struct finsh_syscall_item* item;
 
-	item = (struct finsh_syscall_item*)rt_malloc(sizeof(struct finsh_syscall_item));
+	item = (struct finsh_syscall_item*)malloc(sizeof(struct finsh_syscall_item));
 	if (item != RT_NULL)
 	{
 		item->next = NULL;
@@ -81,7 +80,7 @@ void finsh_syscall_append(const char* name, syscall_func func)
 		}
 	}
 }
-#endif
+
 
 struct finsh_syscall* finsh_syscall_lookup(const char* name)
 {

@@ -152,17 +152,17 @@ bool finsh_handle_history(struct finsh_shell* shell, char ch)
 	 */
 	if (ch == 0x1b) {
 		shell->stat = WAIT_SPEC_KEY;
-		return True;
+		return true;
 	}
 
 	if ((shell->stat == WAIT_SPEC_KEY)) {
 		if (ch == 0x5b) {
 			shell->stat = WAIT_FUNC_KEY;
-			return True;
+			return true;
 		}
 
 		shell->stat = WAIT_NORMAL;
-		return False;
+		return false;
 	}
 
 	if (shell->stat == WAIT_FUNC_KEY) {
@@ -174,7 +174,7 @@ bool finsh_handle_history(struct finsh_shell* shell, char ch)
 				shell->current_history --;
 			} else {
 				shell->current_history = 0;
-				return True;
+				return true;
 			}
 
 			/* copy the history command */
@@ -191,7 +191,7 @@ bool finsh_handle_history(struct finsh_shell* shell, char ch)
 				if (shell->history_count != 0) {
 					shell->current_history = shell->history_count - 1;
 				} else {
-					return True;
+					return true;
 				}
 			}
 
@@ -204,11 +204,11 @@ bool finsh_handle_history(struct finsh_shell* shell, char ch)
 		if (shell->use_history) {
 			wm_kprintf("\033[2K\r");
 			wm_kprintf("%s%s", FINSH_PROMPT, shell->line);
-			return True;;
+			return true;;
 		}
 	}
 
-	return False;
+	return false;
 }
 
 void finsh_push_history(struct finsh_shell* shell)
@@ -252,13 +252,13 @@ void finsh_thread_entry(void* parameter)
 
 	while (1) {
 		/* wait receive */
-		// if (xSemaphoreTake(shell->rx_sem, portMAX_DELAY) != pdTRUE) continue;q
+		// if (xSemaphoreTake(shell->rx_sem, portMAX_DELAY) != pdtrue) continue;q
 
 		/* read one character from device */
 		while (wm_device_read(shell->device, 0, &ch, 1) == 1) {
 			/* handle history key */
 			#ifdef FINSH_USING_HISTORY
-			if (finsh_handle_history(shell, ch) == True) continue;
+			if (finsh_handle_history(shell, ch) == true) continue;
 			#endif
 
 			/* handle CR key */
@@ -337,7 +337,7 @@ void finsh_system_var_init(const void* begin, const void* end)
 }
 
 #if defined(__ICCARM__)               /* for IAR compiler */
-  #ifdef FINSH_USING_SYMTAB
+  #ifdef CONFIG_FINSH_USING_SYMTAB
     #pragma section="FSymTab"
     #pragma section="VSymTab"
   #endif
@@ -350,7 +350,7 @@ void finsh_system_var_init(const void* begin, const void* end)
  */
 void finsh_system_init(void)
 {
-#ifdef FINSH_USING_SYMTAB
+#ifdef CONFIG_FINSH_USING_SYMTAB
 	finsh_system_function_init(__section_begin("FSymTab"), __section_end("FSymTab"));
 	finsh_system_var_init(__section_begin("VSymTab"), __section_end("VSymTab"));
 #endif
@@ -365,7 +365,7 @@ void finsh_system_init(void)
 	shell->rx_sem = xSemaphoreCreateMutex();
 	xTaskCreate( finsh_thread_entry, \
 						  "tshell", \
-						  FINSH_THREAD_STACK_SIZE, \
+						  CONFIG_FINSH_THREAD_STACK_SIZE, \
 						  NULL, tskIDLE_PRIORITY + 5, \
 						  &finsh_thread);
 }

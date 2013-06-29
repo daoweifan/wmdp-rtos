@@ -33,53 +33,6 @@ long version(void)
 }
 FINSH_FUNCTION_EXPORT(version, show RT-Thread version information);
 
-#define rt_list_entry(node, type, member) \
-    ((type *)((char *)(node) - (unsigned long)(&((type *)0)->member)))
-extern struct rt_object_information rt_object_container[];
-
-#ifdef RT_USING_DEVICE
-static long _list_device(struct rt_list_node *list)
-{
-	struct rt_device *device;
-	struct rt_list_node *node;
-	const char *device_type_str[] =
-	{
-		"Character Device",
-		"Block Device",
-		"Network Interface",
-		"MTD Device",
-		"CAN Device",
-		"RTC",
-		"Sound Device",
-		"Graphic Device",
-		"I2C Device",
-		"USB Slave Device",
-		"USB Host Bus",
-		"SPI Bus",
-		"SPI Device",
-		"SDIO Bus",
-		"Unknown"
-	};
-
-	wm_kprintf("device    type      \n");
-	wm_kprintf("-------- ---------- \n");
-	for (node = list->next; node != list; node = node->next)
-	{
-		device = (struct rt_device*)(rt_list_entry(node, struct rt_object, list));
-		wm_kprintf("%-8s %-8s \n", device->parent.name,
-             (device->type <= RT_Device_Class_Unknown)?device_type_str[device->type]:device_type_str[RT_Device_Class_Unknown]);
-	}
-
-	return 0;
-}
-
-long list_device(void)
-{
-	return _list_device(&rt_object_container[RT_Object_Class_Device].object_list);
-}
-FINSH_FUNCTION_EXPORT(list_device, list device in system)
-#endif
-
 long list(void)
 {
 	struct finsh_syscall_item* syscall_item;
@@ -90,7 +43,7 @@ long list(void)
 		struct finsh_syscall* index;
 		for (index = _syscall_table_begin; index < _syscall_table_end; index ++)
 		{
-#ifdef FINSH_USING_DESCRIPTION
+#ifdef CONFIG_FINSH_USING_DESCRIPTION
 			wm_kprintf("%-16s -- %s\n", index->name, index->desc);
 #else
 			wm_kprintf("%s\n", index->name);
@@ -111,7 +64,7 @@ long list(void)
 		struct finsh_sysvar* index;
 		for (index = _sysvar_table_begin; index < _sysvar_table_end; index ++)
 		{
-#ifdef FINSH_USING_DESCRIPTION
+#ifdef CONFIG_FINSH_USING_DESCRIPTION
 			wm_kprintf("%-16s -- %s\n", index->name, index->desc);
 #else
 			wm_kprintf("%s\n", index->name);
@@ -166,7 +119,7 @@ void list_prefix(char* prefix)
 				/* set name_ptr */
 				name_ptr = index->name;
 
-#ifdef FINSH_USING_DESCRIPTION
+#ifdef CONFIG_FINSH_USING_DESCRIPTION
 				wm_kprintf("%-16s -- %s\n", index->name, index->desc);
 #else
 				wm_kprintf("%s\n", index->name);
@@ -205,7 +158,7 @@ void list_prefix(char* prefix)
 				/* set name ptr */
 				name_ptr = index->name;
 
-#ifdef FINSH_USING_DESCRIPTION
+#ifdef CONFIG_FINSH_USING_DESCRIPTION
 				wm_kprintf("%-16s -- %s\n", index->name, index->desc);
 #else
 				wm_kprintf("%s\n", index->name);
@@ -238,7 +191,7 @@ void list_prefix(char* prefix)
 	}
 }
 
-#ifdef FINSH_USING_SYMTAB
+#ifdef CONFIG_FINSH_USING_SYMTAB
 static int dummy = 0;
 FINSH_VAR_EXPORT(dummy, finsh_type_int, dummy variable for finsh)
 #endif

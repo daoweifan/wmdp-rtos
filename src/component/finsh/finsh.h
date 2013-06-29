@@ -14,7 +14,9 @@
 #ifndef __FINSH_H__
 #define __FINSH_H__
 
+#include "config.h"
 #include "def.h"
+
 
 #define RT_NULL 0
 
@@ -97,7 +99,7 @@ typedef long (*syscall_func)();
 struct finsh_syscall
 {
 	const char*		name;		/* the name of system call */
-#if defined(FINSH_USING_DESCRIPTION) && defined(FINSH_USING_SYMTAB)
+#if defined(CONFIG_FINSH_USING_DESCRIPTION) && defined(CONFIG_FINSH_USING_SYMTAB)
 	const char*		desc;		/* description of system call */
 #endif
 	syscall_func func;		/* the function address of system call */
@@ -118,7 +120,7 @@ struct finsh_syscall* finsh_syscall_lookup(const char* name);
 struct finsh_sysvar
 {
 	const char*		name;		/* the name of variable */
-#if defined(FINSH_USING_DESCRIPTION) && defined(FINSH_USING_SYMTAB)
+#if defined(CONFIG_FINSH_USING_DESCRIPTION) && defined(CONFIG_FINSH_USING_SYMTAB)
 	const char* 	desc;		/* description of system variable */
 #endif
 	u_char		 type;		/* the type of variable */
@@ -136,8 +138,8 @@ extern struct finsh_sysvar_item* global_sysvar_list;
 /* find out system variable, which should be implemented in user program */
 struct finsh_sysvar* finsh_sysvar_lookup(const char* name);
 
-#ifdef FINSH_USING_SYMTAB
-	#ifdef FINSH_USING_DESCRIPTION
+#ifdef CONFIG_FINSH_USING_SYMTAB
+	#ifdef CONFIG_FINSH_USING_DESCRIPTION
 		/**
 		 * @ingroup finsh
 		 *
@@ -332,7 +334,6 @@ u_char finsh_errno(void);
 /* get error string */
 const char* finsh_error_string(u_char type);
 
-#ifdef RT_USING_HEAP
 /**
  * @ingroup finsh
  *
@@ -351,6 +352,5 @@ void finsh_syscall_append(const char* name, syscall_func func);
  * @param addr the address of system variable
  */
 void finsh_sysvar_append(const char* name, u_char type, void* addr);
-#endif
 
 #endif

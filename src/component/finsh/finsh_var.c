@@ -11,6 +11,8 @@
  * Date           Author       Notes
  * 2010-03-22     Bernard      first version
  */
+#include <string.h>
+#include <stdlib.h>
 #include "finsh.h"
 #include "finsh_var.h"
 
@@ -86,14 +88,12 @@ struct finsh_var* finsh_var_lookup(const char* name)
 	return &global_variable[i];
 }
 
-#ifdef RT_USING_HEAP
-extern char *strdup(const char *s);
 void finsh_sysvar_append(const char* name, u_char type, void* var_addr)
 {
 	/* create a sysvar */
 	struct finsh_sysvar_item* item;
 
-	item = (struct finsh_sysvar_item*) rt_malloc (sizeof(struct finsh_sysvar_item));
+	item = (struct finsh_sysvar_item*) malloc (sizeof(struct finsh_sysvar_item));
 	if (item != NULL)
 	{
 		item->next = NULL;
@@ -112,7 +112,6 @@ void finsh_sysvar_append(const char* name, u_char type, void* var_addr)
 		}
 	}
 }
-#endif
 
 struct finsh_sysvar* finsh_sysvar_lookup(const char* name)
 {
